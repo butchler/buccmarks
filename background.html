@@ -1,0 +1,112 @@
+<html>
+<head>
+<script src="persistence.js" type="application/javascript"></script>
+<script src="persistence.store.sql.js" type="application/javascript"></script>
+<script src="persistence.store.websql.js" type="application/javascript"></script>
+<script src="db.js" type="application/javascript"></script>
+<script>
+
+
+function sendScreenshot(id){
+	Bookmark.findBy('chromeId', id, function(obj){
+		
+		if (obj){
+			console.log('Found:' + obj.chromeId);
+			chrome.extension.sendRequest({"answer": obj.chromeId, "img": obj.img});
+		} else {
+			console.log('Not found: ' + id)
+		}
+		
+	});
+}
+
+function takeScreenshot(id) {
+	
+	// TODO - I should probably play with those options, to get good compression.
+	chrome.tabs.captureVisibleTab(null, function(img) {
+		saveScreenshot(id, img);
+	});
+
+}
+
+function saveScreenshot(id, img){
+	var n = new Bookmark();
+	n.chromeId = id;
+	n.img = img;
+	persistence.add(n);
+	persistence.flush(function(){
+		console.log('Saved: ' + id + ' Size: ' + img.length);
+	}); // this is async
+}
+
+function deleteScreenshot(id){
+	Bookmark.findBy('chromeId', id, function(del){
+		if (del){
+			persistence.remove(del);
+			persistence.flush(function(){
+				console.log('Removed: ' + id);
+			});
+		} else {
+			console.log('Nothing to remove. Not found: ' + id);
+		}
+	});
+}
+
+chrome.bookmarks.onCreated.addListener(function(id, bookmark) {
+	takeScreenshot(id);
+});
+
+chrome.bookmarks.onRemoved.addListener(function(id, removeInfo) {
+	deleteScreenshot(id);
+});
+
+chrome.extension.onRequest.addListener(
+  function(request, sender, sendResponse) {
+	console.log('New Request');
+    if (request.ask){
+	  sendScreenshot(request.ask);
+	}
+});
+
+// Opening Buccmarks
+chrome.browserAction.onClicked.addListener(function(tab) {
+
+	var tabUrl = chrome.extension.getURL('bookmarks.html');
+	
+	chrome.tabs.create({url: tabUrl}, function(tab) {
+      var targetId = tab.id;
+
+      var initBookmarks = function(tabId, changedProps) {
+        // We are waiting for the tab we opened to finish loading.
+        // Check that the the tab's id matches the tab we opened,
+        // and that the tab is done loading.
+        if (tabId != targetId || changedProps.status != "complete")
+          return;
+
+        // Passing the above test means this is the event we were waiting for.
+        // There is nothing we need to do for future onUpdated events, so we
+        // use removeListner to stop geting called when onUpdated events fire.
+        chrome.tabs.onUpdated.removeListener(initBookmarks);
+
+        // Look through all views to find the window which will display
+        // the screenshot.  The url of the tab which will display the
+        // screenshot includes a query parameter with a unique id, which
+        // ensures that exactly one view will have the matching URL.
+        var views = chrome.extension.getViews();
+        for (var i = 0; i < views.length; i++) {
+          var view = views[i];
+          if (view.location.href == tabUrl) {
+            view.init();
+            break;
+          }
+        }
+      };
+      chrome.tabs.onUpdated.addListener(initBookmarks);
+
+    });
+});
+</script>
+</head>
+<body>
+</body>
+</html>

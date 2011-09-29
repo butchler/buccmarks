@@ -1,0 +1,117 @@
+<html>
+<head>
+	<title>Buccmarks</title>
+<style>
+div, td, th { color: black; }
+img.screenie { 
+	width: 350px;
+	height: 191px; 
+}
+
+div.bookmark {
+	width: 350px;
+	height: 191px;
+	overflow: hidden;
+	border: 1px solid #444;
+	background-color: #777;
+	box-shadow: 1px 1px 6px #999;
+	display: block;
+	float: left;
+	margin: 20px;
+}
+
+div.caption {
+	position: absolute;
+	background-color: #333;
+	opacity: 0.90;
+	color: white;
+	width: 340px;
+	font-family: "Helvetica", sans-serif;
+	text-shadow: 0px -1px 1px black;
+	padding: 5px;
+}
+
+body, div#bookmarks {
+	width: 100%;
+}
+
+body {
+	overflow-x: hidden;
+}
+</style>
+
+<script type="text/javascript" src="jquery.js"></script>
+
+
+<script>
+
+	console.log("Good Morning :)");
+
+	function askForScreenie(id){
+		chrome.extension.sendRequest({"ask": id});
+	}
+	
+	function fillScreenie(id, img){
+		$('img#'+id)[0].src = img;
+	}
+
+	function dumpBookmarks(query) {
+		var bookmarkTreeNodes = chrome.bookmarks.getTree(function(bookmarkTreeNodes) {
+			dumpTreeNodes(bookmarkTreeNodes, query);
+		});
+	}
+
+	function dumpTreeNodes(bookmarkNodes, query) {
+		var i;
+		for (i = 0; i < bookmarkNodes.length; i++) {
+			dumpNode(bookmarkNodes[i], query);
+		}
+	}
+
+	function dumpNode(bookmarkNode, query) {
+		if (bookmarkNode.url && bookmarkNode.url != "") {
+			
+			var image = $('<img>');
+			image.attr('href', bookmarkNode.url);
+			image.attr('id', bookmarkNode.id);
+			image.attr('class', 'screenie');
+ 
+			var link = $('<a>').attr('href', bookmarkNode.url).attr('target','_blank').append(image);
+
+			var span = $('<span>')[0];
+			span.innerHTML = bookmarkNode.title;
+			
+			var caption = $('<div>').attr('class', 'caption').append(span);
+			
+			var node = $('<div>').attr('class', 'bookmark').append(caption).append(link);
+	
+			$('#bookmarks').append(node);
+			askForScreenie(bookmarkNode.id);
+		}
+		
+		if (bookmarkNode.children && bookmarkNode.children.length > 0) {
+			dumpTreeNodes(bookmarkNode.children, query);
+		}
+
+	}
+	
+	chrome.extension.onRequest.addListener(
+	  function(request, sender, sendResponse) {
+		console.log('Received Screenie');
+		if (request.answer){
+			fillScreenie(request.answer, request.img);
+		}
+	});
+	
+	function init(){
+		// just in case I need some init. . .
+	}
+</script>
+</head>
+<body onLoad="dumpBookmarks();">
+<div id="bookmarks"></div>
+<div id="editdialog"></div>
+<div id="deletedialog"></div>
+<div id="adddialog"></div>
+</body>
+</html>
