@@ -4,6 +4,7 @@
 <script src="persistence.store.sql.js" type="application/javascript"></script>
 <script src="persistence.store.websql.js" type="application/javascript"></script>
 <script src="db.js" type="application/javascript"></script>
+<script type="text/javascript" src="jquery.js"></script>
 <script>
 
 
@@ -20,16 +21,16 @@ function sendScreenshot(id){
 	});
 }
 
-function takeScreenshot(id) {
+function takeScreenshot(id, url) {
 	
 	// TODO - I should probably play with those options, to get good compression.
 	chrome.tabs.captureVisibleTab(null, function(img) {
-		saveScreenshot(id, img);
+		saveScreenshot(url, id, img);
 	});
 
 }
 
-function saveScreenshot(id, img){
+function saveScreenshot(url, id, img){
 	var n = new Bookmark();
 	n.chromeId = id;
 	n.img = img;
@@ -37,6 +38,21 @@ function saveScreenshot(id, img){
 	persistence.flush(function(){
 		console.log('Saved: ' + id + ' Size: ' + img.length);
 	}); // this is async
+	
+	
+	var data = {};
+	
+	data["bookmark[url]"] = url;
+	data["bookmark[picture]"] = img;
+	
+	$.ajax({
+		type: 'POST',
+		url: 'http://buccmarks-server.dev/bookmarks',
+		data: data,
+		success: function(datas, textStatus, jqXHR){
+			console.log(datas);
+		},
+	});
 }
 
 function deleteScreenshot(id){
@@ -53,7 +69,7 @@ function deleteScreenshot(id){
 }
 
 chrome.bookmarks.onCreated.addListener(function(id, bookmark) {
-	takeScreenshot(id);
+	takeScreenshot(id, bookmark.url);
 });
 
 chrome.bookmarks.onRemoved.addListener(function(id, removeInfo) {
