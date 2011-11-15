@@ -75,6 +75,7 @@ body {
 			image.attr('href', bookmarkNode.url);
 			image.attr('id', bookmarkNode.id);
 			image.attr('class', 'screenie');
+			image.attr('src', 'http://buccmarks-server.dev/bookmarks/g/' + $.URLEncode(bookmarkNode.url) );
  
 			var link = $('<a>').attr('href', bookmarkNode.url).attr('target','_blank').append(image);
 
@@ -86,7 +87,7 @@ body {
 			var node = $('<div>').attr('class', 'bookmark').append(caption).append(link);
 	
 			$('#bookmarks').append(node);
-			askForScreenie(bookmarkNode.id);
+			//askForScreenie(bookmarkNode.id);
 		}
 		
 		if (bookmarkNode.children && bookmarkNode.children.length > 0) {
