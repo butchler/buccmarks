@@ -5,6 +5,7 @@
 <script src="persistence.store.websql.js" type="application/javascript"></script>
 <script src="db.js" type="application/javascript"></script>
 <script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="resample.js"></script>
 <script>
 
 
@@ -32,11 +33,18 @@ function sendScreenshot(id,url){
 
 function takeScreenshot(id, url) {
 	
-	// TODO - I should probably play with those options, to get good compression.
-	chrome.tabs.captureVisibleTab(null, { format: 'jpeg', quality: 1 }, function(img) {
-		saveScreenshot(url, id, img);
+	// Using PNG, as it's going to be resized now.
+	chrome.tabs.captureVisibleTab(null, { format: 'png', quality: 100 }, function(img) {
+		resizeScreenshot(url, id, img);
 	});
 
+}
+
+function resizeScreenshot(url, id, img){
+	Resample(img, 350, 191, 
+		function (data){
+			saveScreenshot(url, id, data);
+		});
 }
 
 function saveScreenshot(url, id, img){
