@@ -9,20 +9,24 @@
 <script>
 
 
-function sendScreenshot(id, url, callback){
+function sendScreenshot(id, url, callbackWay){
 	Bookmark.findBy('chromeId', id, function(obj){
 		
 		if (obj){
-			console.log('Found:' + obj.chromeId);
-			callback({"answer": obj.chromeId, "img": obj.img});
+			console.log('Cache Hit:' + obj.chromeId);
+			callbackWay({"answer": obj.chromeId, "img": obj.img});
 		} else {
-			console.log('Not found - Fallback Buccmarks Server:' + id);
+			console.log('Cache Miss:' + id);
+			console.log('Falling back to Buccmarks Server: ' + id);
 			
 			$.ajax({
 				type: 'GET',
 				url: 'http://buccmarks-server.dev/bookmarks/g/' + $.URLEncode(url),
-				success: function(datas, textStatus, jqXHR){
-					callback({"answer": obj.chromeId, "img": datas});
+				success: function(data, textStatus, jqXHR){
+					callbackWay({"answer": id, "img": data});
+					console.log('Hit on Buccmarks-Server: ' + id);
+					console.log('Saving to Cache: ' + id);
+					saveScreenshot(url, id, data);
 				},
 			});
 			
