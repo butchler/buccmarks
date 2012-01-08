@@ -9,12 +9,12 @@
 <script>
 
 
-function sendScreenshot(id,url){
+function sendScreenshot(id, url, callback){
 	Bookmark.findBy('chromeId', id, function(obj){
 		
 		if (obj){
 			console.log('Found:' + obj.chromeId);
-			chrome.extension.sendRequest({"answer": obj.chromeId, "img": obj.img});
+			callback({"answer": obj.chromeId, "img": obj.img});
 		} else {
 			console.log('Not found - Fallback Buccmarks Server:' + id);
 			
@@ -22,7 +22,7 @@ function sendScreenshot(id,url){
 				type: 'GET',
 				url: 'http://buccmarks-server.dev/bookmarks/g/' + $.URLEncode(url),
 				success: function(datas, textStatus, jqXHR){
-					chrome.extension.sendRequest({"answer": obj.chromeId, "img": datas});
+					callback({"answer": obj.chromeId, "img": datas});
 				},
 			});
 			
@@ -41,8 +41,7 @@ function takeScreenshot(id, url) {
 }
 
 function resizeScreenshot(url, id, img){
-	Resample(img, 350, 191, 
-		function (data){
+	Resample(img, 350, 191, function (data){
 			saveScreenshot(url, id, data);
 		});
 }
@@ -95,9 +94,9 @@ chrome.bookmarks.onRemoved.addListener(function(id, removeInfo) {
 
 chrome.extension.onRequest.addListener(
   function(request, sender, sendResponse) {
-	console.log('New Request');
+	console.log('Screenie request: ' + request.url);
     if (request.ask){
-	  sendScreenshot(request.ask, request.url);
+		sendScreenshot(request.ask, request.url, sendResponse)
 	}
 });
 

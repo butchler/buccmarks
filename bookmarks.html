@@ -48,7 +48,9 @@ body {
 	console.log("Good Morning :)");
 
 	function askForScreenie(id, url){
-		chrome.extension.sendRequest({"ask": id, "url": url});
+		chrome.extension.sendRequest({"ask": id, "url": url}, function(response){
+			fillScreenie(response.answer, response.img);
+		});
 	}
 	
 	function fillScreenie(id, img){
@@ -95,14 +97,6 @@ body {
 		}
 
 	}
-	
-	chrome.extension.onRequest.addListener(
-	  function(request, sender, sendResponse) {
-		console.log('Received Screenie');
-		if (request.answer){
-			fillScreenie(request.answer, request.img);
-		}
-	});
 	
 	function init(){
 		// just in case I need some init. . .
