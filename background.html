@@ -8,14 +8,23 @@
 <script>
 
 
-function sendScreenshot(id){
+function sendScreenshot(id,url){
 	Bookmark.findBy('chromeId', id, function(obj){
 		
 		if (obj){
 			console.log('Found:' + obj.chromeId);
 			chrome.extension.sendRequest({"answer": obj.chromeId, "img": obj.img});
 		} else {
-			console.log('Not found: ' + id)
+			console.log('Not found - Fallback Buccmarks Server:' + id);
+			
+			$.ajax({
+				type: 'GET',
+				url: 'http://buccmarks-server.dev/bookmarks/g/' + $.URLEncode(url),
+				success: function(datas, textStatus, jqXHR){
+					chrome.extension.sendRequest({"answer": obj.chromeId, "img": datas});
+				},
+			});
+			
 		}
 		
 	});
@@ -24,7 +33,7 @@ function sendScreenshot(id){
 function takeScreenshot(id, url) {
 	
 	// TODO - I should probably play with those options, to get good compression.
-	chrome.tabs.captureVisibleTab(null, function(img) {
+	chrome.tabs.captureVisibleTab(null, { format: 'jpeg', quality: 1 }, function(img) {
 		saveScreenshot(url, id, img);
 	});
 
@@ -80,7 +89,7 @@ chrome.extension.onRequest.addListener(
   function(request, sender, sendResponse) {
 	console.log('New Request');
     if (request.ask){
-	  sendScreenshot(request.ask);
+	  sendScreenshot(request.ask, request.url);
 	}
 });
 
