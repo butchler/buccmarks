@@ -9,44 +9,57 @@
 <script>
 
 
-function sendScreenshot(id, url, callbackWay){
+function sendScreenshot(id, url, sendToScreen){
 	Bookmark.findBy('chromeId', id, function(obj){
-		
 		if (obj){
 			console.log('Cache Hit:' + obj.chromeId);
-			callbackWay({"answer": obj.chromeId, "img": obj.img});
+			sendToScreen({"answer": obj.chromeId, "img": obj.img});
 		} else {
 			console.log('Cache Miss:' + id);
 			console.log('Falling back to Buccmarks Server: ' + id);
 			
-			$.ajax({
-				type: 'GET',
-				url: 'http://buccmarks-server.dev/bookmarks/g/' + $.URLEncode(url),
-				success: function(data, textStatus, jqXHR){
-					callbackWay({"answer": id, "img": data});
-					
-					if (data.length > 0){
-						console.log('Hit on Buccmarks-Server: ' + id);
-						console.log('Saving to Cache: ' + id);
-						saveScreenshot(url, id, data);	
-					} else {
-						console.log('Miss on Buccmarks-Server: ' + id);
-					}
-				},
-			});
-			
+			getScreenshotFromServer(id, url, sendToScreen);
 		}
-		
 	});
 }
 
-function takeScreenshot(id, url) {
-	
-	// Using PNG, as it's going to be resized now.
-	chrome.tabs.captureVisibleTab(null, { format: 'png', quality: 100 }, function(img) {
-		saveScreenshot(url, id, img, postScreenshot);
+function getScreenshotFromServer(id, url, sendToScreen){
+	$.ajax({
+		type: 'GET',
+		url: 'http://buccmarks-server.dev/bookmarks/g/' + $.URLEncode(url),
+		success: function(data, textStatus, jqXHR){
+		
+			if (sendToScreen){
+				sendToScreen({"answer": id, "img": data});
+			}
+		
+			if (data.length > 0){
+				console.log('Hit on Buccmarks-Server: ' + id);
+				console.log('Saving to Cache: ' + id);
+				saveScreenshot(url, id, data);	
+			} else {
+				console.log('Miss on Buccmarks-Server: ' + id);
+			}
+		},
 	});
+}
 
+function getScreenshotFromTab(id, url) {
+	chrome.windows.getCurrent(function(w){
+		chrome.tabs.query({active: true, windowId: w.id}, function (t){
+			
+			/* If Chrome is syncing, the urls are different, so skip snapshotting. */
+			if (t[0].url != url){
+				console.log('Thou shalt not take a screenshot while Chrome is syncing.');
+				console.log('Tab: ' + t[0].url);
+				console.log('Book: ' + url);
+			} else {
+				chrome.tabs.captureVisibleTab(null, { format: 'png' }, function(img) {
+					saveScreenshot(url, id, img, postScreenshot);
+				});
+			}
+		});
+	});
 }
 
 function saveScreenshot(url, id, img, callback){
@@ -96,25 +109,11 @@ function deleteScreenshot(id){
 	});
 }
 
-var syncInProgress = false;
-
-chrome.bookmarks.onImportBegan.addListener(function() {
-	syncInProgress = true;
-	console.log("Syncing!");
-});
-
-chrome.bookmarks.onImportEnded.addListener(function() {
-	syncInProgress = false;
-	console.log("Done syncing!");
-});
-
 // TODO: Chrome will fire this event even when it's syncing.
 // Whithout proper distinction, we may take a snapshop of whah the
 // the user is seeing when sync starts. Sucks, I know.
 chrome.bookmarks.onCreated.addListener(function(id, bookmark) {
-	if (!syncInProgress){
-		takeScreenshot(id, bookmark.url);
-	}
+	getScreenshotFromTab(id, bookmark.url);
 });
 
 chrome.bookmarks.onRemoved.addListener(function(id, removeInfo) {
