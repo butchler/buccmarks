@@ -24,9 +24,14 @@ function sendScreenshot(id, url, callbackWay){
 				url: 'http://buccmarks-server.dev/bookmarks/g/' + $.URLEncode(url),
 				success: function(data, textStatus, jqXHR){
 					callbackWay({"answer": id, "img": data});
-					console.log('Hit on Buccmarks-Server: ' + id);
-					console.log('Saving to Cache: ' + id);
-					saveScreenshot(url, id, data);
+					
+					if (data.length > 0){
+						console.log('Hit on Buccmarks-Server: ' + id);
+						console.log('Saving to Cache: ' + id);
+						saveScreenshot(url, id, data);	
+					} else {
+						console.log('Miss on Buccmarks-Server: ' + id);
+					}
 				},
 			});
 			
@@ -39,38 +44,41 @@ function takeScreenshot(id, url) {
 	
 	// Using PNG, as it's going to be resized now.
 	chrome.tabs.captureVisibleTab(null, { format: 'png', quality: 100 }, function(img) {
-		resizeScreenshot(url, id, img);
+		saveScreenshot(url, id, img, postScreenshot);
 	});
 
 }
 
-function resizeScreenshot(url, id, img){
+function saveScreenshot(url, id, img, callback){
 	Resample(img, 350, 191, function (data){
-			saveScreenshot(url, id, data);
-		});
+		
+			var n = new Bookmark();
+			n.chromeId = id;
+			n.img = data;
+			persistence.add(n);
+			persistence.flush(function(){
+				console.log('Saved: ' + url + ' Size: ' + data.length);
+			}); // this is async
+			
+			if (callback){
+				callback(url, data);
+			}
+	
+	});
 }
 
-function saveScreenshot(url, id, img){
-	var n = new Bookmark();
-	n.chromeId = id;
-	n.img = img;
-	persistence.add(n);
-	persistence.flush(function(){
-		console.log('Saved: ' + id + ' Size: ' + img.length);
-	}); // this is async
-	
-	
+function postScreenshot(url, img){	
 	var data = {};
 	
 	data["bookmark[url]"] = url;
 	data["bookmark[picture]"] = img;
-	
+
 	$.ajax({
 		type: 'POST',
 		url: 'http://buccmarks-server.dev/bookmarks',
 		data: data,
 		success: function(datas, textStatus, jqXHR){
-			console.log(datas);
+			console.log('Posted: ' + url);
 		},
 	});
 }
@@ -88,8 +96,25 @@ function deleteScreenshot(id){
 	});
 }
 
+var syncInProgress = false;
+
+chrome.bookmarks.onImportBegan.addListener(function() {
+	syncInProgress = true;
+	console.log("Syncing!");
+});
+
+chrome.bookmarks.onImportEnded.addListener(function() {
+	syncInProgress = false;
+	console.log("Done syncing!");
+});
+
+// TODO: Chrome will fire this event even when it's syncing.
+// Whithout proper distinction, we may take a snapshop of whah the
+// the user is seeing when sync starts. Sucks, I know.
 chrome.bookmarks.onCreated.addListener(function(id, bookmark) {
-	takeScreenshot(id, bookmark.url);
+	if (!syncInProgress){
+		takeScreenshot(id, bookmark.url);
+	}
 });
 
 chrome.bookmarks.onRemoved.addListener(function(id, removeInfo) {
