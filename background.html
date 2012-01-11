@@ -104,7 +104,7 @@ function deleteScreenshot(id){
 				console.log('Removed: ' + id);
 			});
 		} else {
-			console.log('Nothing to remove. Not found: ' + id);
+			console.log('No screenie to remove: ' + id);
 		}
 	});
 }
@@ -122,9 +122,17 @@ chrome.bookmarks.onRemoved.addListener(function(id, removeInfo) {
 
 chrome.extension.onRequest.addListener(
   function(request, sender, sendResponse) {
-	console.log('Screenie request: ' + request.url);
     if (request.ask){
+	
+		console.log('Screenie request: ' + request.url);
 		sendScreenshot(request.ask, request.url, sendResponse)
+	
+	} else if (request.delete){
+	
+		console.log('Screenie going down: ' + request.delete);
+		chrome.bookmarks.remove(request.delete, function(){
+			sendResponse({'delete': 'ok'});
+		});
 	}
 });
 

@@ -40,6 +40,17 @@ body, div#bookmarks {
 body {
 	overflow-x: hidden;
 }
+
+.delete {
+	float: right;
+	border: 1px solid white;
+	padding: 3px;
+	width: 10px;
+	border-radius: 5px;
+	margin-left: 10px;
+	margin-bottom: 10px;
+	cursor: pointer;
+}
 </style>
 
 <script type="text/javascript" src="jquery.js"></script>
@@ -55,8 +66,18 @@ body {
 		});
 	}
 	
+	function deleteScreenie(id){
+		chrome.extension.sendRequest({"delete": id}, function(response){
+			removeScreenieFromDom(id);
+		});
+	}
+	
+	function removeScreenieFromDom(id){
+		$('#div'+id).fadeOut("slow");
+	}
+	
 	function fillScreenie(id, img){
-		$('img#'+id)[0].src = img;
+		$('#img'+id)[0].src = img;
 	}
 
 	function dumpBookmarks(query) {
@@ -75,19 +96,27 @@ body {
 	function dumpNode(bookmarkNode, query) {
 		if (bookmarkNode.url && bookmarkNode.url != "") {
 			
-			var image = $('<img>');
-			image.attr('href', bookmarkNode.url);
-			image.attr('id', bookmarkNode.id);
-			image.attr('class', 'screenie');
+			var image = $('<img>').attr({
+				'href' 	: bookmarkNode.url,
+				'id'	: 'img'+bookmarkNode.id,
+				'class'	: 'screenie'
+			});
+			
+			var del = $('<img>').attr({
+				'src' 	: 'delete.png',
+				'alt'	: 'Delete bookmark',
+				'class'	: 'delete'
+			});
+			del.click(function(){
+				deleteScreenie(bookmarkNode.id);
+			});
 			
 			var link = $('<a>').attr('href', bookmarkNode.url).attr('target','_blank').append(image);
 
-			var span = $('<span>')[0];
-			span.innerHTML = bookmarkNode.title;
+			var span = $('<span>').html(bookmarkNode.title);
 			
-			var caption = $('<div>').attr('class', 'caption').append(span);
-			
-			var node = $('<div>').attr('class', 'bookmark').append(caption).append(link);
+			var caption = $('<div>').attr('class', 'caption').append(del).append(span);
+			var node = $('<div>').attr('class', 'bookmark').attr('id', 'div'+bookmarkNode.id).append(caption).append(link);
 	
 			$('#bookmarks').append(node);
 			
