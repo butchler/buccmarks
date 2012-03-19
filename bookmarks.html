@@ -29,8 +29,10 @@ div.caption {
 	font-family: "Helvetica", sans-serif;
 	text-shadow: 0px -1px 1px black;
 	padding: 5px;
-	max-height: 2.0em;
-	overflow-y: hidden;
+	max-height: 1.1em;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	overflow: hidden;
 }
 
 body, div#bookmarks {
@@ -44,7 +46,7 @@ body {
 .delete {
 	float: right;
 	border: 1px solid white;
-	padding: 3px;
+	padding: 2px;
 	width: 10px;
 	border-radius: 5px;
 	margin-left: 10px;

@@ -26,17 +26,16 @@ function sendScreenshot(id, url, sendToScreen){
 function getScreenshotFromServer(id, url, sendToScreen){
 	$.ajax({
 		type: 'GET',
-		url: 'http://buccmarks-server.dev/bookmarks/g/' + $.URLEncode(url),
+		url: 'http://localhost:4000/bookmarks/' + url,
 		success: function(data, textStatus, jqXHR){
-		
-			if (sendToScreen){
-				sendToScreen({"answer": id, "img": data});
-			}
-		
-			if (data.length > 0){
+
+			if (data !== null){
+				if (sendToScreen){
+					sendToScreen({"answer": id, "img": data.img});
+				}
 				console.log('Hit on Buccmarks-Server: ' + id);
 				console.log('Saving to Cache: ' + id);
-				saveScreenshot(url, id, data);	
+				saveScreenshot(url, id, data.img);	
 			} else {
 				console.log('Miss on Buccmarks-Server: ' + id);
 			}
@@ -84,11 +83,11 @@ function postScreenshot(url, img){
 	var data = {};
 	
 	data["bookmark[url]"] = url;
-	data["bookmark[picture]"] = img;
+	data["bookmark[img]"] = img;
 
 	$.ajax({
 		type: 'POST',
-		url: 'http://buccmarks-server.dev/bookmarks',
+		url: 'http://localhost:4000/bookmarks',
 		data: data,
 		success: function(datas, textStatus, jqXHR){
 			console.log('Posted: ' + url);
