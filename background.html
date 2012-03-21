@@ -26,7 +26,7 @@ function sendScreenshot(id, url, sendToScreen){
 function getScreenshotFromServer(id, url, sendToScreen){
 	$.ajax({
 		type: 'GET',
-		url: 'http://localhost:4000/bookmarks/' + url,
+		url: 'http://node.brunobuccolo.com:4000/bookmarks/' + url,
 		success: function(data, textStatus, jqXHR){
 
 			if (data !== null){
@@ -87,7 +87,7 @@ function postScreenshot(url, img){
 
 	$.ajax({
 		type: 'POST',
-		url: 'http://localhost:4000/bookmarks',
+		url: 'http://node.brunobuccolo.com:4000/bookmarks',
 		data: data,
 		success: function(datas, textStatus, jqXHR){
 			console.log('Posted: ' + url);
