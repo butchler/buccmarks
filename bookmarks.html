@@ -34,6 +34,13 @@ div.caption {
 	white-space: nowrap;
 	overflow: hidden;
 }
+div.caption-info {
+	width: 322px;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	overflow: hidden;
+	color: white;
+}
 
 body, div#bookmarks {
 	width: 100%;
@@ -43,15 +50,19 @@ body {
 	overflow-x: hidden;
 }
 
+.bookmark:hover .delete {
+	display: block;
+}
 .delete {
+	display: none;
 	border: 1px solid white;
-	padding: 2px;
+	padding: 3px;
 	width: 10px;
 	border-radius: 5px;
-	margin-top: -8px;
+	margin-top: 3px;
 	cursor: pointer;
 	position: absolute;
-	margin-left: 342px;
+	margin-left: 328px;
 	background: #333;
 	z-index: 2;
 }
@@ -117,7 +128,7 @@ body {
 			
 			var link = $('<a>').attr('href', bookmarkNode.url).attr('target','_blank').append(image);
 
-			var span = $('<span>').html(bookmarkNode.title);
+			var span = $('<div class="caption-info">').html(bookmarkNode.title);
 			
 			var caption = $('<div>').attr('class', 'caption').append(span);
 			var node = $('<div>').attr('class', 'bookmark').attr('id', 'div'+bookmarkNode.id).append(del).append(caption).append(link);
