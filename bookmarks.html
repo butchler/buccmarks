@@ -20,6 +20,19 @@ div.bookmark {
 	margin: 20px;
 }
 
+#help {
+	background-color: rgba(230, 230, 230, 0.8);
+	border-radius: 30px;
+	position: absolute;
+	right: 15px;
+	padding: 7px 12px;
+	font-family: Helvetica;
+	z-index: 3;
+}
+#help a, a:visited {
+	color: white;
+	text-decoration: none;
+}
 div.caption {
 	position: absolute;
 	background-color: #333;
@@ -150,9 +163,20 @@ body {
 </script>
 </head>
 <body onLoad="dumpBookmarks();">
-<div id="bookmarks"></div>
-<div id="editdialog"></div>
-<div id="deletedialog"></div>
-<div id="adddialog"></div>
+	<div id="help"><a href="http://brunobuccolo.github.com/buccmarks/" target="_blank">?</a></div>
+	<div id="bookmarks"></div>
+	<div id="editdialog"></div>
+	<div id="deletedialog"></div>
+	<div id="adddialog"></div>
 </body>
+<script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-11641523-4");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
 </html>
