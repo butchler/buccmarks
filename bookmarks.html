@@ -79,6 +79,11 @@ body {
 	background: #333;
 	z-index: 2;
 }
+
+#seealldialog {
+	clear: both;
+	text-align: center;
+}
 </style>
 
 <script type="text/javascript" src="jquery.js"></script>
@@ -111,6 +116,12 @@ body {
 	function dumpBookmarks(query) {
 		var bookmarkTreeNodes = chrome.bookmarks.getTree(function(bookmarkTreeNodes) {
 			dumpTreeNodes(bookmarkTreeNodes, query);
+		});
+	}
+
+	function dumpRecentBookmarks(numRecent) {
+		var recentBookmarkNodes = chrome.bookmarks.getRecent(numRecent, function(bookmarkTreeNodes) {
+			dumpTreeNodes(bookmarkTreeNodes, undefined);
 		});
 	}
 
@@ -156,18 +167,25 @@ body {
 		}
 
 	}
+
+	function seeAllBookmarks() {
+		$('#bookmarks').empty();
+		dumpBookmarks();
+		$('#seealldialog').remove();
+	}
 	
 	function init(){
 		// just in case I need some init. . .
 	}
 </script>
 </head>
-<body onLoad="dumpBookmarks();">
+<body onLoad="dumpRecentBookmarks(100);">
 	<div id="help"><a href="http://brunobuccolo.github.com/buccmarks/" target="_blank">?</a></div>
 	<div id="bookmarks"></div>
 	<div id="editdialog"></div>
 	<div id="deletedialog"></div>
 	<div id="adddialog"></div>
+	<div id="seealldialog"><button onclick="seeAllBookmarks();">See all bookmarks</button></div>
 </body>
 <script type="text/javascript">
             var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
